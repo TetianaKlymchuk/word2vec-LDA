@@ -68,11 +68,36 @@ class Embeddings:
         """
         return self.wv.most_similar(word, topn=k)
 
-    def get_embedding(self):
-        pass
+    def get_embedding(self, word):
+        """
+        Method to obtain the embedding vector of a word.
+        :param word: word to obtain embedding.
+        :return: word vector <np.array>
+        """
+        return np.array(self.wv[word])
 
-    def get_sentence_embedding(self):
-        pass
+    def get_sentence_embedding(self, sentence):
+        """
+        Get the average vectors of the words in the word2vec vocabulary.
+        :param sentence: text to get embedding. (str)
+        :return: embedding vector (np.array)
+                If no word of the sentence is in vocabulary, return None
+        """
+
+        word_count = 0
+        embedding = None
+        for word in re.findall(r"[\w']+|[.,!?;]", sentence.strip()):
+            if word in self.wv.vocab:
+                word_count += 1
+                if embedding is None:
+                    embedding = self.get_embedding(word)
+                else:
+                    embedding += self.get_embedding(word)
+
+        if embedding is None:
+            return None
+
+        return embedding / word_count
 
     def plot_embedding(self):
         pass
