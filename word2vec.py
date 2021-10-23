@@ -352,5 +352,73 @@ class Embeddings:
             ax.remove()
             # plt.close('all')
 
-    def plot_cluster(self):
-        pass
+    def get_cluster_model(self, n_clusters):
+        """
+        Get cluster model.
+        :return:
+        """
+        X = self.wv[self.wv.vocab]
+        self.cluster_model = KMeans(n_clusters=n_clusters).fit(X)
+
+    def get_cluster(self, x):
+
+        x = np.array(x)
+        x = x.astype(np.double)
+        return self.cluster_model.predict(x)
+
+    def plot_clusters(self, range_cluster=(0, 5)):
+        # TODO
+        if type(range_cluster) == int:
+            min, max = (range_cluster, range_cluster + 1)
+        else:
+            min, max = range_cluster
+
+        vocab = list(self.wv.vocab)
+        list_words = vocab
+        # X = self.wv.vocab
+
+        X = self.wv[self.wv.vocab]
+        tsne = TSNE(n_components=2)
+        X_tsne = tsne.fit_transform(X)
+
+        df = pd.DataFrame(X_tsne, index=vocab, columns=['x', 'y'])
+
+        fig = plt.figure()
+        ax = fig.add_subplot(1, 1, 1)
+
+        for n_clusters in range(min, max):
+            self.get_cluster_model(n_clusters=n_clusters)
+
+            clust = {}
+            for i, word in enumerate(vocab):
+                if word in list_words:
+                    clust[word] = self.cluster_model.labels_[i]
+
+            color_dict = {
+                -1: 'blue',
+                0: 'orange',
+                1: 'red',
+                2: 'green',
+                3: 'yellow',
+                4: 'purple',
+                5: 'black',
+                6: 'gray',
+            }
+
+            colors = {}
+            for word in list_words:
+                if word in clust:
+                    colors[word] = color_dict[clust[word]]
+
+            tot_col = []
+            for word, _ in df.iterrows():
+                tot_col.append(color_dict[clust[word]])
+
+            ax.scatter(df['x'], df['y'], c=tot_col)
+
+            filename = 'plots/clusters_{}'.format(n_clusters)
+            print('Saving cluster {} at {}'.format(n_clusters, filename))
+
+            plt.savefig(filename, dpi=150)
+            # CLOSE PLOTS
+            # plt.close('all')
