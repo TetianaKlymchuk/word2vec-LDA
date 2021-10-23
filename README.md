@@ -28,4 +28,4 @@ Once you are ready to create MR for the final version of your partial task:
 
 Once you are ready to create MR for the production:
 
-* Make sure your destination branch is **develop**;
+* Make sure your destination branch is **master**
