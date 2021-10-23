@@ -59,9 +59,15 @@ class Embeddings:
 
         return model
 
-    def most_similar(self):
-        pass
-
+    def most_similar(self, word, k):
+        """
+        Get the k nearest neighbors to the word.
+        :param word: word to find nearest neighbors.
+        :param k: number of neighbors to return
+        :return: list of (word, similarity)
+        """
+        return self.wv.most_similar(word, topn=k)
+    
     def get_embedding(self):
         pass
 
