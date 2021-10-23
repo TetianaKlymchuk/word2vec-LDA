@@ -117,7 +117,24 @@ class Embeddings:
         self.wv = KeyedVectors.load(path)
 
     def plot_embedding(self):
-        pass
+
+        vocab = list(self.wv.vocab)
+        X = self.wv[self.wv.vocab]
+
+        tsne = TSNE(n_components=2)
+        X_tsne = tsne.fit_transform(X)
+
+        df = pd.DataFrame(X_tsne, index=vocab, columns=['x', 'y'])
+
+        fig = plt.figure()
+        ax = fig.add_subplot(1, 1, 1)
+
+        ax.scatter(df['x'], df['y'])
+
+        for word, pos in df.iterrows():
+            ax.annotate(word, pos)
+
+        plt.show()
 
     def plot_cluster(self):
         pass
