@@ -67,9 +67,14 @@ class Embeddings:
         :return: list of (word, similarity)
         """
         return self.wv.most_similar(word, topn=k)
-    
-    def get_embedding(self):
-        pass
+
+    def get_embedding(self, word):
+        """
+        Method to obtain the embedding vector of a word.
+        :param word: word to obtain embedding.
+        :return: word vector <np.array>
+        """
+        return np.array(self.wv[word])
 
     def get_sentence_embedding(self):
         pass
