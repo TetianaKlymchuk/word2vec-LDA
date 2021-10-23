@@ -229,5 +229,196 @@ class Embeddings:
         start = None
         end = None
 
-    def plot_cluster(self):
-        pass 
+        def on_key(event):
+            print('you pressed', event.key, event.xdata, event.ydata)
+            global start
+            global end
+
+            # GET THE SELECTED BOX DATA POINTS FROM START ('s') TO END ('e') AND ('r') TO RESET
+            if event.key == 'c':
+                start = [event.xdata, event.ydata]
+                end = None
+            elif event.key == 'e':
+                end = [event.xdata, event.ydata]
+
+                if start[0] > end[0]:
+                    start_x = end[0]
+                    end[0] = start[0]
+                    start[0] = start_x
+                if start[1] > end[1]:
+                    start_y = end[1]
+                    end[1] = start[1]
+                    start[1] = start_y
+
+                rect = []
+                for index, pos in df.iterrows():
+                    if start[0] < pos.x < end[0]:
+                        if start[1] < pos.y < end[1]:
+                            rect.append(index)
+
+                tweets = ''
+                tot_col = ['blue'] * len(original)
+                for index in rect:
+                    tweets += ' ' + original['text<gx:text>'][index].strip()
+                    tot_col[index] = 'orange'
+
+                tfidf = TFIDF(texts=original['text<gx:text>'])
+                words = tfidf.get_relevant_words(text=tweets, k=10)
+
+                fig.suptitle(words, fontsize=10)
+                ax.scatter(df['x'], df['y'], c=tot_col)
+                plt.gcf().canvas.draw_idle()
+            elif event.key == 'r':
+                start = None
+                end = None
+
+        fig.canvas.mpl_connect('key_press_event', on_key)
+
+        plt.show()
+
+    def plot_clusters_words(self, list_list_words, tweets):
+        vocab = list(self.wv.vocab)
+        # X = self.wv.vocab
+
+        X = self.wv[self.wv.vocab]
+        tsne = TSNE(n_components=2)
+        X_tsne = tsne.fit_transform(X)
+
+        df = pd.DataFrame(X_tsne, index=vocab, columns=['x', 'y'])
+
+        fig = plt.figure()
+
+        if self.cluster_model is None:
+            self.get_cluster_model(n_clusters=4)
+
+        color_dict = {
+            -1: 'blue',
+            0: 'orange',
+            1: 'red',
+            2: 'green',
+            3: 'yellow',
+            4: 'purple',
+            5: 'black',
+            6: 'gray',
+        }
+
+        for tweet_number, list_words in enumerate(list_list_words):
+
+            old_tweet = tweets[tweet_number]
+            print(old_tweet)
+
+            split_every = 75
+
+            last_i = 0
+            tweet = ''
+            if len(old_tweet) <= split_every:
+                tweet = old_tweet
+            else:
+                for i in range(split_every, len(old_tweet), split_every):
+                    tweet += old_tweet[last_i:i] + '\n'
+                    last_i = i
+
+                tweet += old_tweet[i] + '\n'
+
+            tweet = tweet.strip()
+
+            ax = fig.add_subplot(1, 1, 1)
+            print('TWEET {}'.format(tweet))
+            fig.suptitle(tweet, fontsize=6)
+
+            colors = {}
+            clust = {}
+            for i, word in enumerate(vocab):
+                if word in list_words:
+                    clust[word] = self.cluster_model.labels_[i]
+                    colors[word] = color_dict[clust[word]]
+
+            tot_col = []
+            for word, pos in df.iterrows():
+                if word in list_words:
+                    ax.annotate(word, pos)
+                    tot_col.append(color_dict[clust[word]])
+                else:
+                    tot_col.append(color_dict[-1])
+
+            ax.scatter(df['x'], df['y'], c=tot_col)
+
+            filename = 'plots/tweet_{}'.format(tweet_number)
+            print('Saving tweet {} at {}'.format(tweet_number, filename))
+
+            plt.savefig(filename, dpi=150)
+            # CLOSE PLOTS
+            ax.remove()
+            # plt.close('all')
+
+    def get_cluster_model(self, n_clusters):
+        """
+        Get cluster model.
+        :return:
+        """
+        X = self.wv[self.wv.vocab]
+        self.cluster_model = KMeans(n_clusters=n_clusters).fit(X)
+
+    def get_cluster(self, x):
+
+        x = np.array(x)
+        x = x.astype(np.double)
+        return self.cluster_model.predict(x)
+
+    def plot_clusters(self, range_cluster=(0, 5)):
+        # TODO
+        if type(range_cluster) == int:
+            min, max = (range_cluster, range_cluster + 1)
+        else:
+            min, max = range_cluster
+
+        vocab = list(self.wv.vocab)
+        list_words = vocab
+        # X = self.wv.vocab
+
+        X = self.wv[self.wv.vocab]
+        tsne = TSNE(n_components=2)
+        X_tsne = tsne.fit_transform(X)
+
+        df = pd.DataFrame(X_tsne, index=vocab, columns=['x', 'y'])
+
+        fig = plt.figure()
+        ax = fig.add_subplot(1, 1, 1)
+
+        for n_clusters in range(min, max):
+            self.get_cluster_model(n_clusters=n_clusters)
+
+            clust = {}
+            for i, word in enumerate(vocab):
+                if word in list_words:
+                    clust[word] = self.cluster_model.labels_[i]
+
+            color_dict = {
+                -1: 'blue',
+                0: 'orange',
+                1: 'red',
+                2: 'green',
+                3: 'yellow',
+                4: 'purple',
+                5: 'black',
+                6: 'gray',
+            }
+
+            colors = {}
+            for word in list_words:
+                if word in clust:
+                    colors[word] = color_dict[clust[word]]
+
+            tot_col = []
+            for word, _ in df.iterrows():
+                tot_col.append(color_dict[clust[word]])
+
+            ax.scatter(df['x'], df['y'], c=tot_col)
+
+            filename = 'plots/clusters_{}'.format(n_clusters)
+            print('Saving cluster {} at {}'.format(n_clusters, filename))
+
+            plt.savefig(filename, dpi=150)
+            # CLOSE PLOTS
+            # plt.close('all') 
+            
