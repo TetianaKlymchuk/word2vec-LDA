@@ -97,7 +97,24 @@ class Embeddings:
         if embedding is None:
             return None
 
-        return embedding / word_count
+        return embedding / word_countç
+
+    def get_vectors(self, original, column='text<gx:text>'):
+        tweet_embeddings = []
+        for text in original[column]:
+            emb = self.get_sentence_embedding(text.strip())
+            if emb is not None:
+                tweet_embeddings.append(emb)
+            if emb is None:
+                tweet_embeddings.append([0] * self.embedding_dim)
+
+        return np.array(tweet_embeddings)
+
+    def save(self, path='Data/wordvectors.kv'):
+        self.wv.save(path)
+
+    def load(self, path='Data/wordvectors.kv'):
+        self.wv = KeyedVectors.load(path)
 
     def plot_embedding(self):
         pass
