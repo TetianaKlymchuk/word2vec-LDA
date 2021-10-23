@@ -99,8 +99,41 @@ class Embeddings:
 
         return embedding / word_count
 
+    def get_vectors(self, original, column='text<gx:text>'):
+    tweet_embeddings = []
+    for text in original[column]:
+        emb = self.get_sentence_embedding(text.strip())
+        if emb is not None:
+            tweet_embeddings.append(emb)
+        if emb is None:
+            tweet_embeddings.append([0] * self.embedding_dim)
+
+    return np.array(tweet_embeddings)
+
+    def save(self, path='Data/wordvectors.kv'):
+        self.wv.save(path)
+
+    def load(self, path='Data/wordvectors.kv'):
+        self.wv = KeyedVectors.load(path)
+
     def plot_embedding(self):
-        pass
+        vocab = list(self.wv.vocab)
+        X = self.wv[self.wv.vocab]
+
+        tsne = TSNE(n_components=2)
+        X_tsne = tsne.fit_transform(X)
+
+        df = pd.DataFrame(X_tsne, index=vocab, columns=['x', 'y'])
+
+        fig = plt.figure()
+        ax = fig.add_subplot(1, 1, 1)
+
+        ax.scatter(df['x'], df['y'])
+
+        for word, pos in df.iterrows():
+            ax.annotate(word, pos)
+
+        plt.show()
 
     def plot_cluster(self):
         pass 
