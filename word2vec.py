@@ -44,8 +44,20 @@ class Embeddings:
         self.embedding_dim = embedding_dim
         self.cluster_model = None
 
-    def _get_embeddings(self):
-        pass
+    def _get_embeddings(self, df, column='text', embedding_dim=200, embedding_window=3, min_count=30):
+        """
+        Returns gensim Word2Vec model trained on the column given.
+        """
+
+        l = []
+        for des in df[column]:
+            des = des.translate(des.maketrans({key: ' ' for key in string.punctuation}))
+            des = des.lower()
+            l.append(re.findall(r"[\w']+|[.,!?;]", des.strip()))
+        model = Word2Vec(l, workers=4, size=embedding_dim, min_count=min_count, window=embedding_window,
+                         sample=1e-3, sg=1, seed=1)
+
+        return model
 
     def most_similar(self):
         pass
@@ -61,3 +73,4 @@ class Embeddings:
 
     def plot_cluster(self):
         pass 
+        
