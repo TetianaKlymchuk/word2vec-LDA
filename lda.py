@@ -131,3 +131,37 @@ class LDA:
         plt.ylabel('counts')
         plt.show()
 
+
+class LDA_Parameters:
+
+    def __init__(self, num_topics=30, passes=4, workers=4):
+        self.num_topics = num_topics
+        self.passes = passes
+        self.workers = workers
+
+
+def plot_data(data, clusters=None):
+
+    global tot_col
+
+    # REDUCE DIMENSIONALITY TO PLOT
+    tsne = TSNE(n_components=2, random_state=0)
+    X_tsne = tsne.fit_transform(data)
+
+    df = pd.DataFrame(X_tsne, columns=['x', 'y'])
+
+    fig = plt.figure()
+
+    ax = fig.add_subplot(1, 1, 1)
+
+    # CHANGE COLOR OF THE DATA POINT
+    tot_col = []
+    if clusters is None:
+        tot_col = ['blue'] * len(df)
+    else:
+        tot_col = clusters
+
+    ax.scatter(df['x'], df['y'], c=tot_col)
+
+    plt.show()
+    
